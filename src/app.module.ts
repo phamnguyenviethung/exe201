@@ -13,12 +13,19 @@ import { APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe } from 'nestjs-zod';
 import * as path from 'path';
 import { QueryResolver, I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
+import { ClerkClientProvider } from './share/providers/clerk.provider';
+import { AuthModule } from './modules/auth/auth.module';
+import { CustomerModule } from '@/modules/customer/customer.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         NODE_ENV: Joi.valid('development', 'production').default('development'),
         PORT: Joi.number().default(5678),
+        CLERK_SECRET_KEY: Joi.string().required(),
+        CLERK_PUBLISHABLE_KEY: Joi.string().required(),
+        CLERK_JWT_KEY: Joi.string().required(),
+        CLERK_WEBHOOK_SIGNING_SECRET: Joi.string().required(),
       }),
       validationOptions: {
         abortEarly: false,
@@ -44,10 +51,13 @@ import { QueryResolver, I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
         '../src/generated/i18n.generated.ts',
       ),
     }),
+    AuthModule,
+    CustomerModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    ClerkClientProvider,
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,

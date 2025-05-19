@@ -6,6 +6,8 @@ import { WinstonModule } from 'nest-winston';
 import { AppModule } from './app.module';
 import { configSwagger } from './configs/apiDocs.config';
 import winstonInstance from './configs/winston.config';
+import * as cookieParser from 'cookie-parser';
+
 async function bootstrap() {
   const logger = new AppLogger(bootstrap.name);
 
@@ -14,11 +16,13 @@ async function bootstrap() {
     logger: WinstonModule.createLogger({
       instance: winstonInstance,
     }),
+    cors: true,
   });
 
   configSwagger(app);
   const configService = app.get(ConfigService);
   app.use(morgan('dev'));
+  app.use(cookieParser());
 
   await app.listen(configService.get('PORT'), () => {
     logger.log(
