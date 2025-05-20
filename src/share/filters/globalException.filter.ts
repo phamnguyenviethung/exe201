@@ -25,7 +25,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     this.logger.error(exception);
     console.error(exception);
     response.status(status).json({
-      statusCode: status,
+      success: false,
       message,
       error:
         this.config_service.get('NODE_ENV') !== 'production'

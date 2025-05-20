@@ -7,6 +7,7 @@ import { AppModule } from './app.module';
 import { configSwagger } from './configs/apiDocs.config';
 import winstonInstance from './configs/winston.config';
 import * as cookieParser from 'cookie-parser';
+import { patchNestJsSwagger } from 'nestjs-zod';
 
 async function bootstrap() {
   const logger = new AppLogger(bootstrap.name);
@@ -18,7 +19,7 @@ async function bootstrap() {
     }),
     cors: true,
   });
-
+  patchNestJsSwagger();
   configSwagger(app);
   const configService = app.get(ConfigService);
   app.use(morgan('dev'));

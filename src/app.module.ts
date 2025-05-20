@@ -1,21 +1,26 @@
+import { CustomerModule } from '@/modules/customer/customer.module';
+import { PaymentModule } from '@/modules/payment/payment.module';
+import { ExpressAdapter } from '@bull-board/express';
+import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import * as Joi from 'joi';
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { ZodSerializerInterceptor } from 'nestjs-zod';
+import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import * as Joi from 'joi';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { GlobalExceptionFilter } from './share/filters/globalException.filter';
-import { APP_FILTER } from '@nestjs/core';
-import { TransformInterceptor } from './share/interceptors/apiResponse.interceptor';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import dbConfig from './mikro-orm.config';
-import { APP_PIPE } from '@nestjs/core';
-import { ZodValidationPipe } from 'nestjs-zod';
-import * as path from 'path';
-import { QueryResolver, I18nModule, AcceptLanguageResolver } from 'nestjs-i18n';
-import { ClerkClientProvider } from './share/providers/clerk.provider';
 import { AuthModule } from './modules/auth/auth.module';
-import { CustomerModule } from '@/modules/customer/customer.module';
+import { GlobalExceptionFilter } from './share/filters/globalException.filter';
+import { TransformInterceptor } from './share/interceptors/apiResponse.interceptor';
+import { ClerkClientProvider } from './share/providers/clerk.provider';
+
+import { BullBoardModule } from '@bull-board/nestjs';
+import { BullModule } from '@nestjs/bullmq';
+import { TransactionModule } from './modules/transaction/transaction.module';
+import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,6 +31,17 @@ import { CustomerModule } from '@/modules/customer/customer.module';
         CLERK_PUBLISHABLE_KEY: Joi.string().required(),
         CLERK_JWT_KEY: Joi.string().required(),
         CLERK_WEBHOOK_SIGNING_SECRET: Joi.string().required(),
+        ZALOPAY_APP_ID: Joi.string().required(),
+        ZALOPAY_KEY1: Joi.string().required(),
+        ZALOPAY_KEY2: Joi.string().required(),
+        PAYOS_API_KEY: Joi.string().required(),
+        PAYOS_CLIENT_ID: Joi.string().required(),
+        PAYOS_CHECKSUM: Joi.string().required(),
+        NGROK_URL: Joi.string(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
+        REDIS_PASSWORD: Joi.string().required(),
+        REDIS_USERNAME: Joi.string().required(),
       }),
       validationOptions: {
         abortEarly: false,
@@ -34,6 +50,26 @@ import { CustomerModule } from '@/modules/customer/customer.module';
       envFilePath: process.env.NODE_ENV === 'development' ? '.env.dev' : '.env',
       cache: true,
       expandVariables: true,
+    }),
+
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const host = configService.get<string>('REDIS_HOST');
+        return {
+          connection: {
+            family: 0,
+            host: host,
+            port: configService.get<number>('REDIS_PORT'),
+            password: configService.get<string>('REDIS_PASSWORD') || undefined,
+          },
+        };
+      },
+      inject: [ConfigService],
+    }),
+    BullBoardModule.forRoot({
+      route: '/queues',
+      adapter: ExpressAdapter,
     }),
     MikroOrmModule.forRoot(dbConfig),
     I18nModule.forRoot({
@@ -53,6 +89,8 @@ import { CustomerModule } from '@/modules/customer/customer.module';
     }),
     AuthModule,
     CustomerModule,
+    PaymentModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [
@@ -60,7 +98,7 @@ import { CustomerModule } from '@/modules/customer/customer.module';
     ClerkClientProvider,
     {
       provide: APP_PIPE,
-      useClass: ZodValidationPipe,
+      useClass: AppZodValidationPipe,
     },
     {
       provide: APP_FILTER,
@@ -70,6 +108,7 @@ import { CustomerModule } from '@/modules/customer/customer.module';
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
     },
+    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
   ],
 })
 export class AppModule {}

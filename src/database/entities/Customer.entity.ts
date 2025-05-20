@@ -1,20 +1,12 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, OneToOne, Property } from '@mikro-orm/core';
 import { AppBaseEntity } from './base.entity';
+import { Account } from './Account.entity';
 
 @Entity()
 export class Customer extends AppBaseEntity {
-  @PrimaryKey()
-  id: string;
+  @OneToOne(() => Account)
+  account: Account;
 
-  @Property()
-  firstName: string;
-
-  @Property()
-  lastName: string;
-
-  @Property()
-  email: string;
-
-  @Property({ default: 0, nullable: true })
-  balance: number;
+  @Property({ default: 0 })
+  balance: number = 0;
 }

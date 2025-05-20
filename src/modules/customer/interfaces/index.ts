@@ -1,11 +1,22 @@
+import { DepositTransactionReqDTO } from '../dtos/transaction.dto';
+
 export interface ICustomerService {
   synCustomerFromClerkWebhook(data: ClerkWebhookPayload): Promise<void>;
+  createDepositPaymentLink(params: DepositParams): Promise<void>;
+  processDepositTransaction(transactionID: string): Promise<void>;
 }
 
 export enum ClerkWebhookType {
   UserCreated = 'user.created',
   UserUpdated = 'user.updated',
   UserDeleted = 'user.deleted',
+}
+
+export interface DepositParams {
+  ip: string;
+  host: string;
+  dto: DepositTransactionReqDTO;
+  userID: string;
 }
 
 export interface ClerkWebhookPayload {

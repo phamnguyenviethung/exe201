@@ -1,15 +1,17 @@
+import { Customer } from '@/database/entities/Customer.entity';
+import { RequestWithUser } from '@/share/types/request.type';
+import { ClerkClient } from '@clerk/backend';
+import { MikroORM } from '@mikro-orm/core';
 import {
-  Injectable,
   Inject,
-  UnauthorizedException,
+  Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
-import { Request } from 'express';
-import { ClerkClient } from '@clerk/backend';
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
@@ -20,11 +22,12 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
     private readonly clerkClient: ClerkClient,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly orm: MikroORM,
   ) {
     super();
   }
 
-  async validate(req: Request): Promise<any> {
+  async validate(req: RequestWithUser): Promise<any> {
     try {
       const token = req.headers.authorization?.split(' ')[1];
       if (!token) {
@@ -39,9 +42,20 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
       if (!verifiedToken) {
         throw new UnauthorizedException('Invalid token');
       }
-      const data = await this.clerkClient.users.getUser(verifiedToken.sub);
 
-      return data;
+      const em = this.orm.em.fork();
+
+      const customer = await em.findOne(Customer, {
+        id: verifiedToken.sub,
+      });
+
+      if (!customer) {
+        throw new UnauthorizedException('Customer not found');
+      }
+
+      req.user = customer;
+
+      return customer;
     } catch (error) {
       this.logger.error('Authentication failed', error);
       if (error instanceof UnauthorizedException) {
