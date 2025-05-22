@@ -2,7 +2,7 @@ import { CustomerModule } from '@/modules/customer/customer.module';
 import { PaymentModule } from '@/modules/payment/payment.module';
 import { ExpressAdapter } from '@bull-board/express';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import * as Joi from 'joi';
@@ -21,6 +21,8 @@ import { BullBoardModule } from '@bull-board/nestjs';
 import { BullModule } from '@nestjs/bullmq';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
+import { BookingModule } from './modules/booking/booking.module';
+import { MikroORM } from '@mikro-orm/core';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,6 +32,7 @@ import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
         CLERK_SECRET_KEY: Joi.string().required(),
         CLERK_PUBLISHABLE_KEY: Joi.string().required(),
         CLERK_JWT_KEY: Joi.string().required(),
+        CLERK_CUSTOM_JWT_SECRET: Joi.string().required(),
         CLERK_WEBHOOK_SIGNING_SECRET: Joi.string().required(),
         ZALOPAY_APP_ID: Joi.string().required(),
         ZALOPAY_KEY1: Joi.string().required(),
@@ -91,6 +94,7 @@ import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
     CustomerModule,
     PaymentModule,
     TransactionModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -111,4 +115,10 @@ import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private readonly orm: MikroORM) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.orm.getMigrator().up();
+  }
+}

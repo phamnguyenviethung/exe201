@@ -1,4 +1,4 @@
-import { Customer } from '@/database/entities/Customer.entity';
+import { Customer } from '@/database/entities/Account.entity';
 import { RequestWithUser } from '@/share/types/request.type';
 import { ClerkClient } from '@clerk/backend';
 import { MikroORM } from '@mikro-orm/core';
@@ -33,10 +33,9 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
       if (!token) {
         throw new UnauthorizedException('No token provided');
       }
-      const publicKey = this.configService.get('CLERK_JWT_KEY');
 
       const verifiedToken = await this.jwtService.verifyAsync(token, {
-        publicKey,
+        secret: this.configService.get('CLERK_CUSTOM_JWT_SECRET'),
       });
 
       if (!verifiedToken) {
@@ -57,10 +56,11 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
 
       return customer;
     } catch (error) {
-      this.logger.error('Authentication failed', error);
       if (error instanceof UnauthorizedException) {
         throw error;
       }
+      this.logger.error(error);
+
       throw new UnauthorizedException('Authentication failed');
     }
   }

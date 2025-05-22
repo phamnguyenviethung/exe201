@@ -5,8 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { Webhook } from 'svix';
 import { ClerkAuthGuard } from '../auth/guard/clerk.guard';
 import { CustomerService } from './customer.service';
-import { DepositTransactionReqDTO } from './dtos/';
+import { DepositTransactionReqDTO, DepositTransactionResDTO } from './dtos/';
 import { ClerkWebhookPayload } from './interfaces';
+import { ApiResponse } from '@nestjs/swagger';
 @Controller('customers')
 export class CustomerController {
   constructor(
@@ -29,6 +30,10 @@ export class CustomerController {
 
   @Post('deposit')
   @UseGuards(ClerkAuthGuard)
+  @ApiResponse({
+    status: 201,
+    type: DepositTransactionResDTO,
+  })
   async deposit(
     @Body() dto: DepositTransactionReqDTO,
     @Req() request: RequestWithUser,

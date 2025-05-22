@@ -1,13 +1,13 @@
 import { Logger as AppLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import * as cookieParser from 'cookie-parser';
 import * as morgan from 'morgan';
 import { WinstonModule } from 'nest-winston';
+import { patchNestJsSwagger } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { configSwagger } from './configs/apiDocs.config';
 import winstonInstance from './configs/winston.config';
-import * as cookieParser from 'cookie-parser';
-import { patchNestJsSwagger } from 'nestjs-zod';
 
 async function bootstrap() {
   const logger = new AppLogger(bootstrap.name);

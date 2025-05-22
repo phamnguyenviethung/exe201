@@ -1,12 +1,18 @@
-import { Account, AccountRole } from '@/database/entities/Account.entity';
-import { Customer } from '@/database/entities/Customer.entity';
+import {
+  Account,
+  AccountRole,
+  Customer,
+} from '@/database/entities/Account.entity';
 import { Transaction } from '@/database/entities/Transaction.entity';
 import { EntityManager, MikroORM, Transactional } from '@mikro-orm/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { PaymentService } from '../payment/payment.service';
 import { TransactionAction, TransactionStatus } from '../transaction/enums';
 import { ClerkWebhookPayload, ICustomerService } from './interfaces';
-import { DepositTransactionReqDTO } from './dtos/transaction.dto';
+import {
+  DepositTransactionReqDTO,
+  DepositTransactionResDTO,
+} from './dtos/transaction.dto';
 @Injectable()
 export class CustomerService implements ICustomerService {
   private readonly logger = new Logger(CustomerService.name);
@@ -49,7 +55,7 @@ export class CustomerService implements ICustomerService {
     host: string;
     dto: DepositTransactionReqDTO;
     userID: string;
-  }): Promise<any> {
+  }): Promise<DepositTransactionResDTO> {
     const em = this.orm.em.fork();
     const orderCode = this.generateOrderCode();
 

@@ -1,8 +1,13 @@
-import { DepositTransactionReqDTO } from '../dtos/transaction.dto';
+import {
+  DepositTransactionReqDTO,
+  DepositTransactionResDTO,
+} from '../dtos/transaction.dto';
 
 export interface ICustomerService {
   synCustomerFromClerkWebhook(data: ClerkWebhookPayload): Promise<void>;
-  createDepositPaymentLink(params: DepositParams): Promise<void>;
+  createDepositPaymentLink(
+    params: DepositParams,
+  ): Promise<DepositTransactionResDTO>;
   processDepositTransaction(transactionID: string): Promise<void>;
 }
 

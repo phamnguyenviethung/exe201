@@ -8,6 +8,15 @@ export const DepositTransactionReqSchema = z.object({
   returnUrl: z.string().url(),
 });
 
+export const DepositTransactionResSchema = z.object({
+  paymentUrl: z.string().url(),
+  transactionID: z.string(),
+});
+
 export class DepositTransactionReqDTO extends createZodDto(
   DepositTransactionReqSchema,
+) {}
+
+export class DepositTransactionResDTO extends createZodDto(
+  DepositTransactionResSchema,
 ) {}
