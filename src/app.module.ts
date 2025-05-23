@@ -11,18 +11,22 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import dbConfig from './mikro-orm.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { GlobalExceptionFilter } from './share/filters/globalException.filter';
 import { TransformInterceptor } from './share/interceptors/apiResponse.interceptor';
 import { ClerkClientProvider } from './share/providers/clerk.provider';
 
 import { BullBoardModule } from '@bull-board/nestjs';
+import { MikroORM } from '@mikro-orm/core';
+import { Migrator } from '@mikro-orm/migrations';
+import { defineConfig } from '@mikro-orm/postgresql';
+import { SeedManager } from '@mikro-orm/seeder';
+import { SqlHighlighter } from '@mikro-orm/sql-highlighter';
 import { BullModule } from '@nestjs/bullmq';
+import { BookingModule } from './modules/booking/booking.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
-import { BookingModule } from './modules/booking/booking.module';
-import { MikroORM } from '@mikro-orm/core';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -45,6 +49,11 @@ import { MikroORM } from '@mikro-orm/core';
         REDIS_PORT: Joi.number().required(),
         REDIS_PASSWORD: Joi.string().required(),
         REDIS_USERNAME: Joi.string().required(),
+        DB_NAME: Joi.string().required(),
+        DB_USER: Joi.string().required(),
+        DB_PASSWORD: Joi.string().required(),
+        DB_HOST: Joi.string().required(),
+        DB_PORT: Joi.number().required(),
       }),
       validationOptions: {
         abortEarly: false,
@@ -74,7 +83,35 @@ import { MikroORM } from '@mikro-orm/core';
       route: '/queues',
       adapter: ExpressAdapter,
     }),
-    MikroOrmModule.forRoot(dbConfig),
+    MikroOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return defineConfig({
+          highlighter: new SqlHighlighter(),
+          debug: configService.get<string>('NODE_ENV') === 'development',
+          dbName: configService.get<string>('DB_NAME'),
+          user: configService.get<string>('DB_USER'),
+          password: configService.get<string>('DB_PASSWORD'),
+          host: configService.get<string>('DB_HOST'),
+          port: configService.get<number>('DB_PORT'),
+          entities: ['./dist/database/entities/*.entity.js'],
+          entitiesTs: ['./src/database/entities/*.entity.ts'],
+          extensions: [Migrator, SeedManager],
+          migrations: {
+            path: 'dist/migrations',
+            pathTs: 'src/migrations',
+          },
+          seeder: {
+            path: './dist/database/seeders',
+            pathTs: './src/database/seeders',
+            defaultSeeder: 'DatabaseSeeder',
+            glob: '!(*.d).{js,ts}',
+            fileName: (className: string) => className,
+          },
+        });
+      },
+      inject: [ConfigService],
+    }),
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {

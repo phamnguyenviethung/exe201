@@ -10,9 +10,9 @@ if (!fs.existsSync(logDir)) {
 }
 
 const logFormat = format.combine(
-  format.timestamp({ format: 'DD/MM/YY HH:mm:ss' }),
+  format.timestamp({ format: 'DD/MM HH:mm:ss' }),
   format.ms(),
-  nestWinstonModuleUtilities.format.nestLike('MyApp', {
+  nestWinstonModuleUtilities.format.nestLike('App', {
     colors: true,
     prettyPrint: true,
   }),
