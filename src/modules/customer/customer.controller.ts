@@ -1,13 +1,15 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 
 import { RequestWithUser } from '@/share/types/request.type';
 import { ConfigService } from '@nestjs/config';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Webhook } from 'svix';
 import { ClerkAuthGuard } from '../auth/guard/clerk.guard';
 import { CustomerService } from './customer.service';
 import { DepositTransactionReqDTO, DepositTransactionResDTO } from './dtos/';
 import { ClerkWebhookPayload } from './interfaces';
-import { ApiResponse } from '@nestjs/swagger';
+
+@ApiTags('Customers')
 @Controller('customers')
 export class CustomerController {
   constructor(
@@ -28,10 +30,19 @@ export class CustomerController {
     );
   }
 
+  @Get('me')
+  @UseGuards(ClerkAuthGuard)
+  @ApiOperation({ summary: 'Get current customer profile' })
+  async getMe(@Req() request: RequestWithUser) {
+    return this.customerService.getMe(request.user.id);
+  }
+
   @Post('deposit')
   @UseGuards(ClerkAuthGuard)
+  @ApiOperation({ summary: 'Create a deposit transaction' })
   @ApiResponse({
     status: 201,
+    description: 'Deposit transaction created successfully',
     type: DepositTransactionResDTO,
   })
   async deposit(

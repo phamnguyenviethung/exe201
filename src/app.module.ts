@@ -7,7 +7,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import * as Joi from 'joi';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
-import { ZodSerializerInterceptor } from 'nestjs-zod';
 import * as path from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -149,7 +148,6 @@ import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
     },
-    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
   ],
 })
 export class AppModule implements OnModuleInit {
