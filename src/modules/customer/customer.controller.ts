@@ -63,7 +63,6 @@ export class CustomerController {
   }
 
   @Get('list')
-  @UseGuards(ClerkAuthGuard)
   @ApiOperation({ summary: 'Get all customers' })
   async getAllCustomers() {
     return this.customerService.getAllCustomers();
