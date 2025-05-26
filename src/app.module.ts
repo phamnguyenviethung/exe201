@@ -34,20 +34,22 @@ import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
         PORT: Joi.number().default(5678),
         CLERK_SECRET_KEY: Joi.string().required(),
         CLERK_PUBLISHABLE_KEY: Joi.string().required(),
-        CLERK_JWT_KEY: Joi.string().required(),
         CLERK_CUSTOM_JWT_SECRET: Joi.string().required(),
         CLERK_WEBHOOK_SIGNING_SECRET: Joi.string().required(),
+
         ZALOPAY_APP_ID: Joi.string().required(),
         ZALOPAY_KEY1: Joi.string().required(),
         ZALOPAY_KEY2: Joi.string().required(),
         PAYOS_API_KEY: Joi.string().required(),
         PAYOS_CLIENT_ID: Joi.string().required(),
         PAYOS_CHECKSUM: Joi.string().required(),
+
         NGROK_URL: Joi.string(),
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
         REDIS_PASSWORD: Joi.string().required(),
         REDIS_USERNAME: Joi.string().required(),
+
         DB_NAME: Joi.string().required(),
         DB_USER: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
