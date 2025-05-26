@@ -132,4 +132,8 @@ export class CustomerService implements ICustomerService {
 
     return customer;
   }
+
+  async getAllCustomers(): Promise<Customer[]> {
+    return this.em.find(Customer, {}, { populate: ['account'] });
+  }
 }
