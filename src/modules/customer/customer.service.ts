@@ -1,19 +1,15 @@
-import {
-  Account,
-  AccountRole,
-  Customer,
-} from '@/database/entities/Account.entity';
+import { Customer } from '@/database/entities/Account.entity';
 import { Transaction } from '@/database/entities/Transaction.entity';
 import { EntityManager, MikroORM, Transactional } from '@mikro-orm/core';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PaymentService } from '../payment/payment.service';
 import { TransactionAction, TransactionStatus } from '../transaction/enums';
-import { ClerkWebhookPayload, ICustomerService } from './interfaces';
+import { CustomerProfileDtoType } from './dtos/customer.dto';
 import {
   DepositTransactionReqDTO,
   DepositTransactionResDTO,
 } from './dtos/transaction.dto';
-import { CustomerProfileDtoType } from './dtos/customer.dto';
+import { ICustomerService } from './interfaces';
 
 @Injectable()
 export class CustomerService implements ICustomerService {
@@ -24,26 +20,6 @@ export class CustomerService implements ICustomerService {
     private readonly paymentService: PaymentService,
     private readonly orm: MikroORM,
   ) {}
-
-  @Transactional()
-  async synCustomerFromClerkWebhook(data: ClerkWebhookPayload): Promise<void> {
-    this.logger.log(`Syncing customer ${data.data.id}`);
-
-    const account = await this.em.upsert(Account, {
-      id: data.data.id,
-      firstName: data.data.first_name,
-      lastName: data.data.last_name,
-      email: data.data.email_addresses[0].email_address,
-      role: AccountRole.USER,
-    });
-
-    await this.em.upsert(Customer, {
-      id: data.data.id,
-      account,
-    });
-
-    this.logger.log(`Customer ${data.data.id} synced`);
-  }
 
   private generateOrderCode(): string {
     const prefix = 'NT';

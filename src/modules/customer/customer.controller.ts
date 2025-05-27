@@ -3,11 +3,9 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { RequestWithUser } from '@/share/types/request.type';
 import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Webhook } from 'svix';
 import { ClerkAuthGuard } from '../auth/guard/clerk.guard';
 import { CustomerService } from './customer.service';
 import { DepositTransactionReqDTO, DepositTransactionResDTO } from './dtos/';
-import { ClerkWebhookPayload } from './interfaces';
 
 @ApiTags('Customers')
 @Controller('customers')
@@ -16,19 +14,6 @@ export class CustomerController {
     private readonly customerService: CustomerService,
     private configSerivce: ConfigService,
   ) {}
-
-  @Post('sync')
-  async synCustomerFromClerkWebhook(@Req() req) {
-    const wh = new Webhook(
-      this.configSerivce.get('CLERK_WEBHOOK_SIGNING_SECRET'),
-    );
-
-    const data = await wh.verify(JSON.stringify(req.body), req.headers);
-
-    await this.customerService.synCustomerFromClerkWebhook(
-      data as ClerkWebhookPayload,
-    );
-  }
 
   @Get('me')
   @UseGuards(ClerkAuthGuard)
