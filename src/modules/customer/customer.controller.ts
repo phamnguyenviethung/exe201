@@ -15,13 +15,6 @@ export class CustomerController {
     private configSerivce: ConfigService,
   ) {}
 
-  @Get('me')
-  @UseGuards(ClerkAuthGuard)
-  @ApiOperation({ summary: 'Get current customer profile' })
-  async getMe(@Req() request: RequestWithUser) {
-    return this.customerService.getMe(request.user.id);
-  }
-
   @Post('deposit')
   @UseGuards(ClerkAuthGuard)
   @ApiOperation({ summary: 'Create a deposit transaction' })

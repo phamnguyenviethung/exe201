@@ -6,7 +6,7 @@ import {
   Staff,
 } from '@/database/entities/Account.entity';
 import { EntityManager, Transactional } from '@mikro-orm/core';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ClerkWebhookPayload } from '../customer/interfaces';
 
 @Injectable()
@@ -45,5 +45,44 @@ export class AuthService {
     this.logger.log(
       `${role} ${data.data.email_addresses[0].email_address} synced`,
     );
+  }
+
+  async getProfile(accountID: string): Promise<any> {
+    const account = await this.em.findOne(Account, { id: accountID });
+
+    if (!account) {
+      throw new NotFoundException(`Account with ID ${accountID} not found`);
+    }
+
+    switch (account.role) {
+      case AccountRole.USER:
+        return await this.em.findOne(
+          Customer,
+          {
+            id: account.id,
+          },
+          {
+            populate: ['account'],
+          },
+        );
+      case AccountRole.STAFF:
+        return await this.em.findOne(
+          Staff,
+          {
+            id: account.id,
+          },
+          {
+            populate: ['account'],
+          },
+        );
+      case AccountRole.ADMIN:
+        return await this.em.findOne(
+          Admin,
+          { id: account.id },
+          { populate: ['account'] },
+        );
+      default:
+        throw new NotFoundException(`Account with ID ${accountID} not found`);
+    }
   }
 }

@@ -1,4 +1,3 @@
-import { Customer } from '@/database/entities/Account.entity';
 import { RequestWithUser } from '@/share/types/request.type';
 import { ClerkClient } from '@clerk/backend';
 import { MikroORM } from '@mikro-orm/core';
@@ -12,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
+import { AuthService } from '../auth.service';
 
 @Injectable()
 export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
@@ -23,6 +23,7 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly orm: MikroORM,
+    private readonly authService: AuthService,
   ) {
     super();
   }
@@ -42,19 +43,11 @@ export class ClerkStrategy extends PassportStrategy(Strategy, 'clerk') {
         throw new UnauthorizedException('Invalid token');
       }
 
-      const em = this.orm.em.fork();
+      const data = await this.authService.getProfile(verifiedToken.sub);
 
-      const customer = await em.findOne(Customer, {
-        id: verifiedToken.sub,
-      });
+      req.user = data;
 
-      if (!customer) {
-        throw new UnauthorizedException('Customer not found');
-      }
-
-      req.user = customer;
-
-      return customer;
+      return data;
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;

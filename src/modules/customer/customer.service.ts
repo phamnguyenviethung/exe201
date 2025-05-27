@@ -1,17 +1,16 @@
 import { Customer } from '@/database/entities/Account.entity';
 import { Transaction } from '@/database/entities/Transaction.entity';
 import { EntityManager, MikroORM, Transactional } from '@mikro-orm/core';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import * as dayjs from 'dayjs';
+import * as _ from 'lodash';
 import { PaymentService } from '../payment/payment.service';
 import { TransactionAction, TransactionStatus } from '../transaction/enums';
-import { CustomerProfileDtoType } from './dtos/customer.dto';
 import {
   DepositTransactionReqDTO,
   DepositTransactionResDTO,
 } from './dtos/transaction.dto';
 import { ICustomerService } from './interfaces';
-import * as dayjs from 'dayjs';
-import * as _ from 'lodash';
 
 @Injectable()
 export class CustomerService implements ICustomerService {
@@ -95,20 +94,6 @@ export class CustomerService implements ICustomerService {
     this.logger.log(
       `Customer ${customer.id} balance updated to ${customer.balance}`,
     );
-  }
-
-  async getMe(customerId: string): Promise<CustomerProfileDtoType> {
-    const customer = await this.em.findOne(
-      Customer,
-      { id: customerId },
-      { populate: ['account'] },
-    );
-
-    if (!customer) {
-      throw new NotFoundException(`Customer with ID ${customerId} not found`);
-    }
-
-    return customer;
   }
 
   async getAllCustomers(): Promise<Customer[]> {
