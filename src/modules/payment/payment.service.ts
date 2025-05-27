@@ -25,9 +25,9 @@ export class PaymentService {
   }
 
   // Transaction Queue
-  async addTransactionToQueue(transactionID: string): Promise<void> {
+  async addTransactionToQueue(transactionID: string | number): Promise<void> {
     await this.transactionQueue.add(this.PROCESS_JOB_NAME, {
-      transactionID,
+      transactionID: String(transactionID),
     });
   }
 

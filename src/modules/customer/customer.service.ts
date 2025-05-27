@@ -10,6 +10,8 @@ import {
   DepositTransactionResDTO,
 } from './dtos/transaction.dto';
 import { ICustomerService } from './interfaces';
+import * as dayjs from 'dayjs';
+import * as _ from 'lodash';
 
 @Injectable()
 export class CustomerService implements ICustomerService {
@@ -22,9 +24,9 @@ export class CustomerService implements ICustomerService {
   ) {}
 
   private generateOrderCode(): string {
-    const prefix = 'NT';
-    const random = Math.random().toString(36).substring(2, 15);
-    return `${prefix}-${random}`;
+    const prefix = dayjs().format('YYMMDD');
+    const random = _.random(100000, 999999);
+    return `${prefix}${random}`;
   }
 
   @Transactional()

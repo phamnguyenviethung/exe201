@@ -43,6 +43,8 @@ export class PayOSGateway implements PaymentGatewayInterface {
     const expDate = new Date();
     expDate.setMinutes(expDate.getMinutes() + this.ORDER_TIMEOUT_MINUTES);
     const expiredAt = Math.floor(expDate.getTime() / 1000);
+
+    console.log(dto);
     const res: CheckoutResponseDataType = await payOS.createPaymentLink({
       orderCode: +dto.orderCode,
       amount: dto.amount,
