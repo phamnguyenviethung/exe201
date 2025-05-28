@@ -17,7 +17,18 @@ async function bootstrap() {
     logger: WinstonModule.createLogger({
       instance: winstonInstance,
     }),
-    cors: true,
+  });
+
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+
+      'https://path-way-cv.vercel.app',
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   });
   patchNestJsSwagger();
   configSwagger(app);
