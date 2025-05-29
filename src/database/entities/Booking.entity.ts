@@ -76,6 +76,9 @@ export class BookingActivity extends AppBaseEntity {
   @Property({ nullable: true, default: null })
   note?: string;
 
+  @Property({ nullable: true })
+  meetingLink?: string;
+
   @Property()
   type: BookingActivityType;
 

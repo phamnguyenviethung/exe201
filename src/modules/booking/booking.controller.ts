@@ -166,4 +166,16 @@ export class BookingController {
   ) {
     return this.bookingService.getBookingHistory(req.user.id, page, limit);
   }
+
+  @Patch(':id/assign-staff')
+  @ApiOperation({ summary: 'Assign staff to a booking' })
+  @ApiParam({ name: 'id', description: 'Booking ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Staff has been successfully assigned to the booking.',
+  })
+  @UseGuards(ClerkAuthGuard)
+  async assignStaff(@Param('id') id: string, @Body('staffId') staffId: string) {
+    return this.bookingService.assignStaff(id, staffId);
+  }
 }

@@ -32,17 +32,17 @@ export class Customer extends AppBaseEntity {
   balance: number = 0;
 }
 
+export enum StaffRole {
+  MENTOR = 'mentor',
+}
+
 @Entity()
 export class Staff extends AppBaseEntity {
   @OneToOne(() => Account)
   account: Account;
 
   @Enum(() => StaffRole)
-  role: StaffRole;
-}
-
-export enum StaffRole {
-  MENTOR = 'mentor',
+  role: StaffRole = StaffRole.MENTOR;
 }
 
 @Entity()

@@ -1,21 +1,26 @@
+import { Customer } from '@/database/entities/Account.entity';
 import {
+  Collection,
+  EntityManager,
+  Transactional,
+  wrap,
+} from '@mikro-orm/core';
+import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
-import { EntityManager } from '@mikro-orm/core';
-import { Transactional } from '@mikro-orm/core';
+import { Staff } from '../../../database/entities/Account.entity';
 import {
   Booking,
   BookingActivity,
-  Plan,
-  BookingStatus,
   BookingActivityStatus,
+  BookingStatus,
+  Plan,
 } from '../../../database/entities/Booking.entity';
-import { CreateBookingReqDTO } from '../dtos/create-booking.dto';
 import { CreateBookingActivityDto } from '../dtos/create-booking-activity.dto';
-import { Customer } from '@/database/entities/Account.entity';
+import { CreateBookingReqDTO } from '../dtos/create-booking.dto';
 
 @Injectable()
 export class BookingService {
@@ -225,12 +230,29 @@ export class BookingService {
     await this.em.removeAndFlush(activity);
   }
 
+  @Transactional()
+  async assignStaff(bookingId: string, staffId: string): Promise<Booking> {
+    const booking = await this.em.findOne(Booking, { id: bookingId });
+    if (!booking) {
+      throw new NotFoundException(`Booking with id ${bookingId} not found`);
+    }
+
+    const staff = await this.em.findOne(Staff, { id: staffId });
+    if (!staff) {
+      throw new NotFoundException(`Staff with id ${staffId} not found`);
+    }
+
+    wrap(booking).assign({ mentor: staff });
+    await this.em.persistAndFlush(booking);
+    return booking;
+  }
+
   async getBookingHistory(userId: string, page: number, limit: number) {
-    const [items, total] = await this.em.findAndCount(
+    const [bookings, total] = await this.em.findAndCount(
       Booking,
       { customer: { id: userId } },
       {
-        populate: ['plan'],
+        populate: ['plan', 'mentor', 'mentor.account'],
         orderBy: { createdAt: 'DESC' },
         limit,
         offset: (page - 1) * limit,
@@ -238,14 +260,41 @@ export class BookingService {
     );
 
     return {
-      items: items.map((item) => ({
-        id: item.id,
-        status: item.status,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        totalAmount: item.plan.price,
-        planName: item.plan.name,
-      })),
+      items: bookings.map((booking) => {
+        const activities = (booking as any)
+          .activities as Collection<BookingActivity>;
+        const mentor = booking.mentor as any;
+
+        return {
+          id: booking.id,
+          status: booking.status,
+          createdAt: booking.createdAt,
+          updatedAt: booking.updatedAt,
+          totalAmount: booking.plan.price,
+          planName: booking.plan.name,
+          mentor: mentor
+            ? {
+                id: mentor.id,
+                name: mentor.account
+                  ? `${mentor.account.firstName} ${mentor.account.lastName}`
+                  : 'Unknown',
+              }
+            : null,
+          activities: activities.isInitialized()
+            ? activities.getItems().map((activity) => ({
+                id: activity.id,
+                name: activity.name,
+                content: activity.content,
+                type: activity.type,
+                status: activity.status,
+                startAt: activity.startAt,
+                endAt: activity.endAt,
+                meetingLink: activity.meetingLink,
+                note: activity.note,
+              }))
+            : [],
+        };
+      }),
       total,
       page,
       limit,

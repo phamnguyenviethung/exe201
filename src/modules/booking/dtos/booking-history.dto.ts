@@ -1,6 +1,22 @@
 import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
-import { BookingStatus } from '../../../database/entities/Booking.entity';
+import {
+  BookingStatus,
+  BookingActivityStatus,
+  BookingActivityType,
+} from '../../../database/entities/Booking.entity';
+
+const bookingActivitySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  content: z.string(),
+  type: z.nativeEnum(BookingActivityType),
+  status: z.nativeEnum(BookingActivityStatus),
+  startAt: z.date(),
+  endAt: z.date(),
+  meetingLink: z.string().nullable(),
+  note: z.string().nullable(),
+});
 
 export const bookingHistoryItemSchema = z.object({
   id: z.string(),
@@ -9,6 +25,13 @@ export const bookingHistoryItemSchema = z.object({
   updatedAt: z.date(),
   totalAmount: z.number(),
   planName: z.string(),
+  mentor: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .nullable(),
+  activities: z.array(bookingActivitySchema),
 });
 
 export const bookingHistoryResponseSchema = z.object({
