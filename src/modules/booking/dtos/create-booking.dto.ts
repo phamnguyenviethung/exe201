@@ -9,3 +9,11 @@ const createBookingSchema = z.object({
 });
 
 export class CreateBookingReqDTO extends createZodDto(createBookingSchema) {}
+
+const assignStaffSchema = z.object({
+  staffId: z.string(),
+});
+
+export type AssignStaffDtoType = z.infer<typeof assignStaffSchema>;
+
+export class AssignStaffDto extends createZodDto(assignStaffSchema) {}

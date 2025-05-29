@@ -17,6 +17,7 @@ import {
   ApiQuery,
   ApiResponse,
   ApiTags,
+  ApiBody,
 } from '@nestjs/swagger';
 import { BookingStatus } from '../../database/entities/Booking.entity';
 import { ClerkAuthGuard } from '../auth/guard/clerk.guard';
@@ -25,6 +26,7 @@ import { BookingService } from './services/booking.service';
 import { UpdateActivityStatusDto } from './dtos/update-activity-status.dto';
 import { CompleteActivityDto } from './dtos/complete-activity.dto';
 import { BookingHistoryResponseDto } from './dtos/booking-history.dto';
+import { AssignStaffDto } from './dtos/create-booking.dto';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -170,12 +172,12 @@ export class BookingController {
   @Patch(':id/assign-staff')
   @ApiOperation({ summary: 'Assign staff to a booking' })
   @ApiParam({ name: 'id', description: 'Booking ID' })
+  @ApiBody({ type: AssignStaffDto })
   @ApiResponse({
     status: 200,
     description: 'Staff has been successfully assigned to the booking.',
   })
-  @UseGuards(ClerkAuthGuard)
-  async assignStaff(@Param('id') id: string, @Body('staffId') staffId: string) {
-    return this.bookingService.assignStaff(id, staffId);
+  async assignStaff(@Param('id') id: string, @Body() dto: AssignStaffDto) {
+    return this.bookingService.assignStaff(id, dto.staffId);
   }
 }
