@@ -33,6 +33,24 @@ import { AssignStaffDto } from './dtos/create-booking.dto';
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
+  @Get('history')
+  @ApiOperation({ summary: 'Get booking history' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'The booking history has been successfully retrieved.',
+    type: BookingHistoryResponseDto,
+  })
+  @UseGuards(ClerkAuthGuard)
+  async getBookingHistory(
+    @Request() req: RequestWithUser,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ) {
+    return this.bookingService.getBookingHistory(req.user.id, page, limit);
+  }
+
   @Post(':id/activities')
   @ApiOperation({ summary: 'Create a new booking activity' })
   @ApiParam({ name: 'id', description: 'Booking ID' })
@@ -149,24 +167,6 @@ export class BookingController {
     @Param('activityId') activityId: string,
   ) {
     return this.bookingService.deleteActivity(bookingId, activityId);
-  }
-
-  @Get('history')
-  @ApiOperation({ summary: 'Get booking history' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiResponse({
-    status: 200,
-    description: 'The booking history has been successfully retrieved.',
-    type: BookingHistoryResponseDto,
-  })
-  @UseGuards(ClerkAuthGuard)
-  async getBookingHistory(
-    @Request() req: RequestWithUser,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ) {
-    return this.bookingService.getBookingHistory(req.user.id, page, limit);
   }
 
   @Patch(':id/assign-staff')

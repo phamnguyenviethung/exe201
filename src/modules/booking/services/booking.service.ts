@@ -1,10 +1,5 @@
 import { Customer } from '@/database/entities/Account.entity';
-import {
-  Collection,
-  EntityManager,
-  Transactional,
-  wrap,
-} from '@mikro-orm/core';
+import { EntityManager, Transactional, wrap } from '@mikro-orm/core';
 import {
   BadRequestException,
   Injectable,
@@ -128,7 +123,7 @@ export class BookingService {
     );
 
     if (!booking) {
-      throw new NotFoundException(`Booking with id ${id} not found`);
+      throw new BadRequestException(`Booking with id ${id} not found`);
     }
 
     return booking;
@@ -155,7 +150,7 @@ export class BookingService {
 
     const booking = await this.em.findOne(Booking, { id });
     if (!booking) {
-      throw new NotFoundException(`Booking with id ${id} not found`);
+      throw new BadRequestException(`Booking with id ${id} not found`);
     }
 
     booking.status = status;
@@ -178,7 +173,7 @@ export class BookingService {
     });
 
     if (!activity) {
-      throw new NotFoundException('Activity not found');
+      throw new BadRequestException('Activity not found');
     }
 
     activity.status = status;
@@ -201,7 +196,7 @@ export class BookingService {
     const booking = await this.em.findOne(Booking, { id: bookingId });
 
     if (!booking) {
-      throw new NotFoundException(`Booking with id ${bookingId} not found`);
+      throw new BadRequestException(`Booking with id ${bookingId} not found`);
     }
 
     booking.status = BookingStatus.CONFIRMED;
@@ -248,6 +243,7 @@ export class BookingService {
   }
 
   async getBookingHistory(userId: string, page: number, limit: number) {
+    console.log('userId', userId);
     const [bookings, total] = await this.em.findAndCount(
       Booking,
       { customer: { id: userId } },
@@ -259,11 +255,33 @@ export class BookingService {
       },
     );
 
+    // Get all booking IDs
+    const bookingIds = bookings.map((booking) => booking.id);
+
+    // Fetch all activities for these bookings in a single query
+    const activities =
+      bookingIds.length > 0
+        ? await this.em.find(
+            BookingActivity,
+            { booking: { id: { $in: bookingIds } } },
+            { orderBy: { startAt: 'ASC' } },
+          )
+        : [];
+
+    // Create a map of booking ID to activities for quick lookup
+    const bookingActivitiesMap = new Map<string, BookingActivity[]>();
+    activities.forEach((activity) => {
+      const bookingId = (activity.booking as any).id;
+      if (!bookingActivitiesMap.has(bookingId)) {
+        bookingActivitiesMap.set(bookingId, []);
+      }
+      bookingActivitiesMap.get(bookingId)!.push(activity);
+    });
+
     return {
       items: bookings.map((booking) => {
-        const activities = (booking as any)
-          .activities as Collection<BookingActivity>;
         const mentor = booking.mentor as any;
+        const bookingActivities = bookingActivitiesMap.get(booking.id) || [];
 
         return {
           id: booking.id,
@@ -280,19 +298,17 @@ export class BookingService {
                   : 'Unknown',
               }
             : null,
-          activities: activities.isInitialized()
-            ? activities.getItems().map((activity) => ({
-                id: activity.id,
-                name: activity.name,
-                content: activity.content,
-                type: activity.type,
-                status: activity.status,
-                startAt: activity.startAt,
-                endAt: activity.endAt,
-                meetingLink: activity.meetingLink,
-                note: activity.note,
-              }))
-            : [],
+          activities: bookingActivities.map((activity) => ({
+            id: activity.id,
+            name: activity.name,
+            content: activity.content,
+            type: activity.type,
+            status: activity.status,
+            startAt: activity.startAt,
+            endAt: activity.endAt,
+            meetingLink: activity.meetingLink,
+            note: activity.note,
+          })),
         };
       }),
       total,
