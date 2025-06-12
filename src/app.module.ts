@@ -21,6 +21,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { BookingModule } from './modules/booking/booking.module';
 import { TransactionModule } from './modules/transaction/transaction.module';
 import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
+import { FeedbackModule } from './modules/feedback/feedback.module';
 
 @Module({
   imports: [
@@ -112,6 +113,7 @@ import { AppZodValidationPipe } from './share/pipes/zodError.pipe';
     PaymentModule,
     TransactionModule,
     BookingModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [
