@@ -2,12 +2,16 @@ import {
   DepositTransactionReqDTO,
   DepositTransactionResDTO,
 } from '../dtos/transaction.dto';
+import { CustomerStatisticsQueryDTO } from '../dtos/statistics.dto';
+import { Customer } from '@/database/entities/Account.entity';
 
 export interface ICustomerService {
   createDepositPaymentLink(
     params: DepositParams,
   ): Promise<DepositTransactionResDTO>;
   processDepositTransaction(transactionID: string): Promise<void>;
+  getAllCustomers(): Promise<Customer[]>;
+  getCustomerStatistics(query: CustomerStatisticsQueryDTO): Promise<any>;
 }
 
 export enum ClerkWebhookType {
